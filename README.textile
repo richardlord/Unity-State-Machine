@@ -1,0 +1,55 @@
+h1. A Finite State Machine architecture for Unity
+
+This repository contains a simple architecture for a Finite State Machine in Unity
+
+h2. Core classes
+
+StateMachine - the state machine component. Add it to a game object.
+State - the class to extend to implement any states in the state machine.
+
+h3. StateMachine
+
+StateMachine contains a public array of states. A state is identified by its name (the name of the asset) or by a reference. Either can be used when calling ChangeState on the StateMachine.
+
+h3. State
+
+State is a ScriptableObject. That means you can create instances of its derived classes as assets in the project and configure them inside the Unity editor.
+
+The State class has five methods that can be overridden to implement the state.
+
+* Enter - called when entering the state
+* Exit - called when exiting the state
+
+* Update - called on the update loop of the game
+* FixedUpdate - called on the fixed update loop of the game
+* LateUpdate - called on the late update loop of the game
+
+The last three of these methods are implemented by the StateMachine class calling into the current state from it's equivalent method, to give the State class more of the functionality of a MonoBehaviour. Additional methods could be added to the StateMachine and State classes to tie the States into other key methods of MonoBehaviour as needed.
+
+h3. Creating States
+
+Having implemented your state classes in code, extending the State class for each, you should create asset instances of the states for use in a StateMachine. To do so, choose the new State option in the create menu and then choose the state type from the dropdown. The dropdown shows all the classes in your project that extend State.
+
+Configure the properties of your states and add them to the state machine.
+
+h2. Example
+
+The project includes an extremely simple example with a state called LogUpdateState that logs a message to the console on every update. Two instances of this have been created with different messages. When the scene starts, one message is output to the console. If you click anywhere the state will change and the other message will be output.
+
+h2. Source Code
+
+* https://github.com/richardlord/Unity-State-Machine
+
+h2. License
+
+Author: Richard Lord
+Copyright (c) Richard Lord 2015
+http://www.richardlord.net
+
+Licence Agreement (The MIT License)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

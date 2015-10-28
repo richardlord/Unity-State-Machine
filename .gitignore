@@ -1,0 +1,24 @@
+Library/
+Temp/
+Obj/
+bin/
+
+*.booproj
+*.csproj
+*.pidb
+*.pidb.meta
+*.sln
+*.userprefs
+*.unityproj
+
+# OS X
+Icon
+Thumbs.db
+.DS_Store
+*.swp
+profile
+
+# UnityVS
+Assets/UnityVS
+UnityVS.*
+Assets/MetroTestCertificate.*
