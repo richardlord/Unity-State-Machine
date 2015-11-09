@@ -1,30 +1,32 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections.Generic;
 
 public class StateMachine : MonoBehaviour
 {
 	public State[] states;
 
-	public State firstState;
+	public string firstState;
 
 	private State _currentState;
 
-	private Dictionary<string, State> statesDictionary;
+	private Dictionary<string, StateData> statesDictionary;
 
-	public State currentState
+	public string currentState
 	{
 		get
 		{
-			return _currentState;
+			return _currentState.stateName;
 		}
 	}
 
 	void Start ()
 	{
-		statesDictionary = new Dictionary<string, State>( states.Length );
+		statesDictionary = new Dictionary<string, StateData>( states.Length );
 		foreach( State state in states )
 		{
-			statesDictionary[ state.name ] = state;
+			statesDictionary[ state.stateName ] = new StateData( state.GetType(), JsonUtility.ToJson( state ) );
+			DestroyImmediate( state );
 		}
 		if( firstState != null )
 		{
@@ -36,44 +38,30 @@ public class StateMachine : MonoBehaviour
 	{
 		if( statesDictionary.ContainsKey( stateName ) )
 		{
-			State state = statesDictionary[ stateName ];
-			ChangeState( state );
+			if( _currentState != null )
+			{
+				_currentState.Exit();
+				statesDictionary[ _currentState.stateName ] = new StateData( _currentState.GetType(), JsonUtility.ToJson( _currentState ) );
+				DestroyImmediate( _currentState );
+			}
+				
+			StateData state = statesDictionary[ stateName ];
+			_currentState = gameObject.AddComponent( state.type ) as State;
+			JsonUtility.FromJsonOverwrite( state.data, _currentState );
+			_currentState.Enter();
 		}
 	}
 
-	public void ChangeState( State state )
+	class StateData
 	{
-		if( _currentState != null )
-		{
-			_currentState.Exit();
-		}
-		_currentState = state;
-		_currentState.Enter();
-	}
+		public string data;
+		public Type type;
 
-	// Pass calls through to the current state object
-	
-	void Update ()
-	{
-		if( _currentState != null )
+		public StateData( Type type, string data )
 		{
-			_currentState.Update();
+			this.type = type;
+			this.data = data;
 		}
-	}
-	
-	void FixedUpdate ()
-	{
-		if( _currentState != null )
-		{
-			_currentState.FixedUpdate();
-		}
-	}
 
-	void LateUpdate ()
-	{
-		if( _currentState != null )
-		{
-			_currentState.LateUpdate();
-		}
 	}
 }

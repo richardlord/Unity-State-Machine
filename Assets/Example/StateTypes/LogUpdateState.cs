@@ -5,7 +5,7 @@ public class LogUpdateState : State
 {
 	public string message;
 
-	public override void Update ()
+	void Update ()
 	{
 		Debug.Log ( message );
 	}

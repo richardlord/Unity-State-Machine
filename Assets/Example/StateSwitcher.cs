@@ -9,7 +9,14 @@ public class StateSwitcher : MonoBehaviour
 	{
 		if( Input.GetMouseButtonDown( 0 ) )
 		{
-			stateMachine.ChangeState( "LogWaiting" );
+			if( stateMachine.currentState == "Hello" )
+			{
+				stateMachine.ChangeState( "Update" );
+			}
+			else
+			{
+				stateMachine.ChangeState( "Hello" );
+			}
 		}
 	}
 }
