@@ -4,11 +4,11 @@ using System.Collections.Generic;
 
 public class StateMachine : MonoBehaviour
 {
-	public State[] states;
-
 	public string firstState;
+	public StateConfig[] states;
 
-	private State _currentState;
+	private MonoBehaviour _currentState;
+	private string _currentStateName;
 
 	private Dictionary<string, StateData> statesDictionary;
 
@@ -16,17 +16,17 @@ public class StateMachine : MonoBehaviour
 	{
 		get
 		{
-			return _currentState.stateName;
+			return _currentStateName;
 		}
 	}
 
-	void Start ()
+	void Awake ()
 	{
 		statesDictionary = new Dictionary<string, StateData>( states.Length );
-		foreach( State state in states )
+		foreach( StateConfig state in states )
 		{
-			statesDictionary[ state.stateName ] = new StateData( state.GetType(), JsonUtility.ToJson( state ) );
-			DestroyImmediate( state );
+			statesDictionary[ state.name ] = new StateData( state.component.GetType(), JsonUtility.ToJson( state.component ) );
+			DestroyImmediate( state.component );
 		}
 		if( firstState != null )
 		{
@@ -40,16 +40,22 @@ public class StateMachine : MonoBehaviour
 		{
 			if( _currentState != null )
 			{
-				_currentState.Exit();
-				statesDictionary[ _currentState.stateName ] = new StateData( _currentState.GetType(), JsonUtility.ToJson( _currentState ) );
+				statesDictionary[ _currentStateName ] = new StateData( _currentState.GetType(), JsonUtility.ToJson( _currentState ) );
 				DestroyImmediate( _currentState );
 			}
 				
 			StateData state = statesDictionary[ stateName ];
-			_currentState = gameObject.AddComponent( state.type ) as State;
+			_currentStateName = stateName;
+			_currentState = gameObject.AddComponent( state.type ) as MonoBehaviour;
 			JsonUtility.FromJsonOverwrite( state.data, _currentState );
-			_currentState.Enter();
 		}
+	}
+
+	[Serializable]
+	public struct StateConfig
+	{
+		public string name;
+		public MonoBehaviour component;
 	}
 
 	class StateData

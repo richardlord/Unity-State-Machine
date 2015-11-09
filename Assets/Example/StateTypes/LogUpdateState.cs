@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class LogUpdateState : State
+public class LogUpdateState : MonoBehaviour
 {
 	public string message;
 
