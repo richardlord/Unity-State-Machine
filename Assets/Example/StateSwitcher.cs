@@ -13,6 +13,10 @@ public class StateSwitcher : MonoBehaviour
 			{
 				stateMachine.ChangeState( "Update" );
 			}
+			else if( stateMachine.currentState == "Update" )
+			{
+				stateMachine.ChangeState( "Both" );
+			}
 			else
 			{
 				stateMachine.ChangeState( "Hello" );
