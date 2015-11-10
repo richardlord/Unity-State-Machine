@@ -43,7 +43,7 @@ public class StateMachine : MonoBehaviour
 
 	public void ChangeState( string stateName )
 	{
-		if( statesDictionary.ContainsKey( stateName ) )
+		if( stateName != currentStateName && statesDictionary.ContainsKey( stateName ) )
 		{
 			List<int> newStateIds = statesDictionary[ stateName ].ToList();
 			List<ActiveComponentData> newStateComponents = new List<ActiveComponentData>();
