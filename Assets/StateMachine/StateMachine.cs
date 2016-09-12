@@ -8,10 +8,10 @@ public class StateMachine : MonoBehaviour
 	public string firstState;
 	public StateConfig[] states;
 
-	private List<ActiveComponentData> currentStateComponents;
+	private ActiveComponentData currentStateData;
 	private string currentStateName;
 
-	private Dictionary<string, int[]> statesDictionary;
+	private Dictionary<string, int> statesDictionary;
 	private Dictionary<int, ComponentData> componentsDictionary;
 
 	public string currentState
@@ -24,15 +24,15 @@ public class StateMachine : MonoBehaviour
 
 	void Awake ()
 	{
-		statesDictionary = new Dictionary<string, int[]>( states.Length );
+		statesDictionary = new Dictionary<string, int>( states.Length );
 		foreach( StateConfig state in states )
 		{
-			statesDictionary[ state.name ] = getComponentIds( state.components );
+			statesDictionary[ state.name ] = state.component.GetInstanceID();
 		}
 		componentsDictionary = new Dictionary<int, ComponentData>();
 		foreach( StateConfig state in states )
 		{
-			serializeComponents( state.components );
+			serializeComponent( state.component );
 		}
 
 		if( firstState != null )
@@ -45,27 +45,13 @@ public class StateMachine : MonoBehaviour
 	{
 		if( stateName != currentStateName && statesDictionary.ContainsKey( stateName ) )
 		{
-			List<int> newStateIds = statesDictionary[ stateName ].ToList();
-			List<ActiveComponentData> newStateComponents = new List<ActiveComponentData>();
-
-			if( currentStateComponents != null )
+			if( currentStateData.component != null )
 			{
-				for( int i = currentStateComponents.Count - 1; i >= 0; --i )
-				{
-					if( newStateIds.Contains( currentStateComponents[i].id ) )
-					{
-						newStateComponents.Add( currentStateComponents[i] );
-						newStateIds.Remove( currentStateComponents[i].id );
-						currentStateComponents.RemoveAt( i );
-					}
-				}
-
-				serializeComponents( currentStateComponents );
+				serializeComponent( currentStateData );
 			}
 				
 			currentStateName = stateName;
-			deserializeComponents( newStateIds, newStateComponents );
-			currentStateComponents = newStateComponents;
+			currentStateData = deserializeComponent( statesDictionary[ stateName ] );
 		}
 	}
 
@@ -80,49 +66,37 @@ public class StateMachine : MonoBehaviour
 		return ids;
 	}
 
-	private void serializeComponents( MonoBehaviour[] components )
+	private void serializeComponent( MonoBehaviour component )
 	{
-		for( int i = 0; i < components.Length; ++i )
+		if( component != null )
 		{
-			MonoBehaviour component = components[i];
-			if( component != null )
-			{
-				componentsDictionary[component.GetInstanceID()] = new ComponentData( component.GetInstanceID(), component.GetType(), JsonUtility.ToJson( component ) );
-				DestroyImmediate( component );
-			}
+			componentsDictionary[component.GetInstanceID()] = new ComponentData( component.GetInstanceID(), component.GetType(), JsonUtility.ToJson( component ) );
+			DestroyImmediate( component );
 		}
 	}
 
-	private void serializeComponents( List<ActiveComponentData> components )
+	private void serializeComponent( ActiveComponentData componentData )
 	{
-		for( int i = 0; i < components.Count; ++i )
+		if( componentData.component != null )
 		{
-			ActiveComponentData data = components[i];
-			if( data.component != null )
-			{
-				componentsDictionary[data.id] = new ComponentData( data.id, data.component.GetType(), JsonUtility.ToJson( data.component ) );
-				DestroyImmediate( data.component );
-			}
+			componentsDictionary[componentData.id] = new ComponentData( componentData.id, componentData.component.GetType(), JsonUtility.ToJson( componentData.component ) );
+			DestroyImmediate( componentData.component );
 		}
 	}
 
-	private void deserializeComponents( List<int> ids, List<ActiveComponentData> store )
+	private ActiveComponentData deserializeComponent( int id )
 	{
-		for( int i = 0; i < ids.Count; ++i )
-		{
-			int id = ids[i];
-			ComponentData data = componentsDictionary[id];
-			MonoBehaviour component = gameObject.AddComponent( data.type ) as MonoBehaviour;
-			JsonUtility.FromJsonOverwrite( data.data, component );
-			store.Add( new ActiveComponentData( id, component ) );
-		}
+		ComponentData data = componentsDictionary[id];
+		MonoBehaviour component = gameObject.AddComponent( data.type ) as MonoBehaviour;
+		JsonUtility.FromJsonOverwrite( data.data, component );
+		return new ActiveComponentData( id, component );
 	}
 
 	[Serializable]
 	public struct StateConfig
 	{
 		public string name;
-		public MonoBehaviour[] components;
+		public MonoBehaviour component;
 	}
 
 	struct ComponentData
