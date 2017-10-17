@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System;
-using System.Linq;
 using System.Collections.Generic;
 
 public class StateMachine : MonoBehaviour
@@ -53,7 +52,7 @@ public class StateMachine : MonoBehaviour
 		if( component != null )
 		{
 			ComponentData componentData = new ComponentData( component.GetType(), JsonUtility.ToJson( component ) );
-			DestroyImmediate( component );
+			Destroy( component );
 			return componentData;
 		}
 		return null;
