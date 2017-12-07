@@ -7,10 +7,11 @@ public class StateMachine : MonoBehaviour
 	public string firstState;
 	public StateConfig[] states;
 
-	private MonoBehaviour currentStateComponent;
+	private List<ActiveComponentData> currentStateComponents;
 	private string currentStateName;
 
-	private Dictionary<string, ComponentData> statesDictionary;
+	private Dictionary<string, int[]> statesDictionary;
+	private Dictionary<int, ComponentData> componentsDictionary;
 
 	public string currentState
 	{
@@ -22,11 +23,22 @@ public class StateMachine : MonoBehaviour
 
 	void Awake ()
 	{
-		statesDictionary = new Dictionary<string, ComponentData>( states.Length );
+		statesDictionary = new Dictionary<string, int[]>( states.Length );
 		foreach( StateConfig state in states )
 		{
-			statesDictionary[ state.name ] = SerializeComponent( state.component );
+			int[] ids = new int[ state.components.Length ];
+			for( int i = 0; i < state.components.Length; ++i )
+			{
+				ids[i] = state.components[i].GetInstanceID();
+			}
+			statesDictionary[ state.name ] = ids;
 		}
+		componentsDictionary = new Dictionary<int, ComponentData>();
+		foreach( StateConfig state in states )
+		{
+			SerializeComponents( state.components );
+		}
+
 		if( firstState != null )
 		{
 			ChangeState( firstState );
@@ -37,54 +49,98 @@ public class StateMachine : MonoBehaviour
 	{
 		if( stateName != currentStateName && statesDictionary.ContainsKey( stateName ) )
 		{
-			if( currentStateComponent != null )
+			List<int> newStateIds = new List<int>( statesDictionary[ stateName ] );
+			List<ActiveComponentData> newStateComponents = new List<ActiveComponentData>( newStateIds.Count );
+
+			if( currentStateComponents != null )
 			{
-				statesDictionary[ currentStateName ] = SerializeComponent( currentStateComponent );
+				for( int i = currentStateComponents.Count - 1; i >= 0; --i )
+				{
+					if( newStateIds.Contains( currentStateComponents[i].id ) )
+					{
+						newStateComponents.Add( currentStateComponents[i] );
+						newStateIds.Remove( currentStateComponents[i].id );
+						currentStateComponents.RemoveAt( i );
+					}
+				}
+
+				SerializeComponents( currentStateComponents );
 			}
-				
+
 			currentStateName = stateName;
-			currentStateComponent = DeserializeComponent( statesDictionary[stateName] );
+			DeserializeComponents( newStateIds, newStateComponents );
+			currentStateComponents = newStateComponents;
 		}
 	}
 
-	private ComponentData SerializeComponent( MonoBehaviour component )
+	private void SerializeComponents( MonoBehaviour[] components )
 	{
-		if( component != null )
+		for( int i = 0; i < components.Length; ++i )
 		{
-			ComponentData componentData = new ComponentData( component.GetType(), JsonUtility.ToJson( component ) );
-			Destroy( component );
-			return componentData;
+			MonoBehaviour component = components[i];
+			if( component != null )
+			{
+				componentsDictionary[component.GetInstanceID()] = new ComponentData( component.GetInstanceID(), component.GetType(), JsonUtility.ToJson( component ) );
+				Destroy( component );
+			}
 		}
-		return null;
 	}
 
-	private MonoBehaviour DeserializeComponent( ComponentData data )
+	private void SerializeComponents( List<ActiveComponentData> components )
 	{
-		if( data != null )
+		for( int i = 0; i < components.Count; ++i )
 		{
+			ActiveComponentData data = components[i];
+			if( data.component != null )
+			{
+				componentsDictionary[data.id] = new ComponentData( data.id, data.component.GetType(), JsonUtility.ToJson( data.component ) );
+				Destroy( data.component );
+			}
+		}
+	}
+
+	private void DeserializeComponents( List<int> ids, List<ActiveComponentData> store )
+	{
+		for( int i = 0; i < ids.Count; ++i )
+		{
+			int id = ids[i];
+			ComponentData data = componentsDictionary[id];
 			MonoBehaviour component = gameObject.AddComponent( data.type ) as MonoBehaviour;
 			JsonUtility.FromJsonOverwrite( data.data, component );
-			return component;
+			store.Add( new ActiveComponentData( id, component ) );
 		}
-		return null;
 	}
 
 	[Serializable]
-	public struct StateConfig
+	public class StateConfig
 	{
 		public string name;
-		public MonoBehaviour component;
+		public MonoBehaviour[] components;
 	}
 
 	class ComponentData
 	{
+		public int id;
 		public Type type;
 		public string data;
 
-		public ComponentData( Type type, string data )
+		public ComponentData( int id, Type type, string data )
 		{
+			this.id = id;
 			this.type = type;
 			this.data = data;
+		}
+	}
+
+	class ActiveComponentData
+	{
+		public int id;
+		public MonoBehaviour component;
+
+		public ActiveComponentData( int id, MonoBehaviour component )
+		{
+			this.id = id;
+			this.component = component;
 		}
 	}
 }
