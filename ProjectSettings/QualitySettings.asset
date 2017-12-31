@@ -175,7 +175,7 @@ QualitySettings:
     resolutionScalingFixedDPIFactor: 1
     excludedTargetPlatforms: []
   m_PerPlatformDefaultQuality:
-    Android: 2
+    Android: 5
     BlackBerry: 2
     GLES Emulation: 5
     PS3: 5
@@ -191,4 +191,5 @@ QualitySettings:
     Windows Store Apps: 5
     XBOX360: 5
     XboxOne: 5
-    iPhone: 2
+    iPhone: 5
+    tvOS: 5
