@@ -2,39 +2,49 @@ h1. A Finite State Machine architecture for Unity
 
 This repository contains a simple architecture for a Finite State Machine in Unity
 
+h2. Concept
+
+In this state machine, a state is conceptualised as a set of components. When entering the state these components are initialised and when leaving the state these components are destroyed. So a change in state occurs through the change in the components on the game object.
+
+By using standard Unity components for the states the full component lifecycle can be used within each state. Start can be used when entering the state, Update, LateUpdate, FixedUpdate etc. can be used during the state, and OnDestroy can be used when leaving the state.
+
 h2. Core classes
 
-StateMachine - the state machine component. Add it to a game object.
-State - the class to extend to implement any states in the state machine.
+There is only one script for the state machine. This is the StateMachine component. Add it to a game object to create a state machine. All the other assets in this project are for an example scene using the state machine.
 
-h3. StateMachine
+h2. StateMachine
 
-StateMachine contains a public array of states. A state is identified by its name (the name of the asset) or by a reference. Either can be used when calling ChangeState on the StateMachine.
+The StateMachine contains a public array of states. Each state is identified by its name, which is a string that you choose for each state.
 
-h3. State
+Each state contains one or more components which are the components for that state. The components should be added to the game object and configured as necessary, then added to the appropriate states.
 
-State is a ScriptableObject. That means you can create instances of its derived classes as assets in the project and configure them inside the Unity editor.
+A component may be in more than one state and a state may contain more than one component.
 
-The State class has five methods that can be overridden to implement the state.
+The components don't have to be on the same game object as the state machine but they usually will be. When entering a state the components will be added to whichever game object they were initially attached to.
 
-* Enter - called when entering the state
-* Exit - called when exiting the state
+h2. Changing State
 
-* Update - called on the update loop of the game
-* FixedUpdate - called on the fixed update loop of the game
-* LateUpdate - called on the late update loop of the game
+The StateMachine class contains a public method called ChangeState which takes a single string as the parameter. The string should be the name of a state. When called, the current state will be exited and the state with the given name will be entered.
 
-The last three of these methods are implemented by the StateMachine class calling into the current state from it's equivalent method, to give the State class more of the functionality of a MonoBehaviour. Additional methods could be added to the StateMachine and State classes to tie the States into other key methods of MonoBehaviour as needed.
+pre.  public void ChangeState( string stateName )
 
-h3. Creating States
+If the state machine is already in the indicated state or the indicated state does not exist then nothing will happen.
 
-Having implemented your state classes in code, extending the State class for each, you should create asset instances of the states for use in a StateMachine. To do so, choose the new State option in the create menu and then choose the state type from the dropdown. The dropdown shows all the classes in your project that extend State.
+h2. Technical
 
-Configure the properties of your states and add them to the state machine.
+To maintain the data within a state when leaving the state and returning to it later, each component in a state is serialised when exiting the state and deserialised again when entering the state.
+
+However, due to the way Unity manages the component lifecycle the serialisation happens before the OnDisable and OnDestroy methods are called, so the OnDestroy method can't be used to modify properties of the state component and retain those changes for the next time the state is entered.
+
+Similarly, Awake and OnEnable are called before the component data has been deserialised so the serialised state should not be used in these methods. The component is fully initialised and deserialised when the Start method is called so this is the best method to use for activity when entering the state.
+
+Components must already be present within the scene. When the scene starts all components in each state are serialised and destroyed. The components for the initial state are then deserialised and added back to the game object.
+
+When changing between states, if a component is included in both the state that is being exited and the state that is being entered then it is not removed and re-added to the game object.
 
 h2. Example
 
-The project includes an extremely simple example with a state called LogUpdateState that logs a message to the console on every update. Two instances of this have been created with different messages. When the scene starts, one message is output to the console. If you click anywhere the state will change and the other message will be output.
+The project includes an extremely simple example with an animated character and two states. In the idle state the character just standes around doing nothing. In the patrol state he walks back and forth between two patrol points. There are two buttons for changing between the states.
 
 h2. Source Code
 
