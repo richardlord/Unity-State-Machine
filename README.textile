@@ -10,7 +10,15 @@ By using standard Unity components for the states the full component lifecycle c
 
 h2. Core classes
 
-There is only one script for the state machine. This is the StateMachine component. Add it to a game object to create a state machine. All the other assets in this project are for an example scene using the state machine.
+There are two scripts for the component.
+
+The StateMachine component is the component for the state machine. Add it to a game object to create a state machine.
+
+The StateMachineEditor script controls how the inspector for the StateMachine component looks and behaves.
+
+Copy the StateMachine folder to add both scripts to your project.
+
+All the other assets in this project are for an example scene that uses the state machine.
 
 h2. StateMachine
 
