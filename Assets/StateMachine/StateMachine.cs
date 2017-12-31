@@ -80,7 +80,7 @@ public class StateMachine : MonoBehaviour
 			MonoBehaviour component = components[i];
 			if( component != null )
 			{
-				componentsDictionary[component.GetInstanceID()] = new ComponentData( component.GetInstanceID(), component.GetType(), JsonUtility.ToJson( component ) );
+				componentsDictionary[component.GetInstanceID()] = new ComponentData( component.GetInstanceID(), component.GetType(), JsonUtility.ToJson( component ), component.gameObject );
 				Destroy( component );
 			}
 		}
@@ -93,7 +93,7 @@ public class StateMachine : MonoBehaviour
 			ActiveComponentData data = components[i];
 			if( data.component != null )
 			{
-				componentsDictionary[data.id] = new ComponentData( data.id, data.component.GetType(), JsonUtility.ToJson( data.component ) );
+				componentsDictionary[data.id] = new ComponentData( data.id, data.component.GetType(), JsonUtility.ToJson( data.component ), data.component.gameObject );
 				Destroy( data.component );
 			}
 		}
@@ -105,7 +105,7 @@ public class StateMachine : MonoBehaviour
 		{
 			int id = ids[i];
 			ComponentData data = componentsDictionary[id];
-			MonoBehaviour component = gameObject.AddComponent( data.type ) as MonoBehaviour;
+			MonoBehaviour component = data.gameObject.AddComponent( data.type ) as MonoBehaviour;
 			JsonUtility.FromJsonOverwrite( data.data, component );
 			store.Add( new ActiveComponentData( id, component ) );
 		}
@@ -123,12 +123,14 @@ public class StateMachine : MonoBehaviour
 		public int id;
 		public Type type;
 		public string data;
+		public GameObject gameObject;
 
-		public ComponentData( int id, Type type, string data )
+		public ComponentData( int id, Type type, string data, GameObject gameObject )
 		{
 			this.id = id;
 			this.type = type;
 			this.data = data;
+			this.gameObject = gameObject;
 		}
 	}
 
